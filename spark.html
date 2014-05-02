@@ -1,0 +1,802 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Overview of Apache Spark</title>
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta name="version" content="S5 1.2a2" />
+<meta name='defaultView' content='slideshow' />
+<meta name='controlVis' content='hidden' />
+<!-- style sheet links -->
+<link rel='stylesheet' href='ui/default/outline.css' type='text/css' media='screen' id='outlineStyle' />
+<link rel='stylesheet' href='ui/default/print.css' type='text/css' media='print' id='slidePrint' />
+<link rel='stylesheet' href='ui/default/opera.css' type='text/css' media='projection' id='operaFix' />
+<link rel='stylesheet' href='ui/default/slides.css' type='text/css' media='screen' id='slideProj' />
+<!-- S5 JS -->
+<script src='ui/default/slides.js' type='text/javascript'></script>
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+
+<script type="text/javascript" src="http://orgmode.org/mathjax/MathJax.js"></script>
+<script type="text/javascript">
+<!--/*--><![CDATA[/*><!--*/
+    MathJax.Hub.Config({
+        // Only one of the two following lines, depending on user settings
+        // First allows browser-native MathML display, second forces HTML/CSS
+        //  config: ["MMLorHTML.js"], jax: ["input/TeX"],
+            jax: ["input/TeX", "output/HTML-CSS"],
+        extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js",
+                     "TeX/noUndefined.js"],
+        tex2jax: {
+            inlineMath: [ ["\\(","\\)"] ],
+            displayMath: [ ['$$','$$'], ["\\[","\\]"], ["\\begin{displaymath}","\\end{displaymath}"] ],
+            skipTags: ["script","noscript","style","textarea","pre","code"],
+            ignoreClass: "tex2jax_ignore",
+            processEscapes: false,
+            processEnvironments: true,
+            preview: "TeX"
+        },
+        showProcessingMessages: true,
+        displayAlign: "center",
+        displayIndent: "2em",
+
+        "HTML-CSS": {
+             scale: 100,
+             availableFonts: ["STIX","TeX"],
+             preferredFont: "TeX",
+             webFont: "TeX",
+             imageFont: "TeX",
+             showMathMenu: true,
+        },
+        MMLorHTML: {
+             prefer: {
+                 MSIE:    "MML",
+                 Firefox: "MML",
+                 Opera:   "HTML",
+                 other:   "HTML"
+             }
+        }
+    });
+/*]]>*///-->
+</script>
+
+</head>
+<body>
+<div class="layout">
+<div id="controls"><!-- no edit --></div>
+<div id="currentSlide"><!-- no edit --></div>
+<div id="header" class="status">
+&#x20;
+</div>
+
+<div id="footer" class="status">
+<h1>Leif Poorman - Overview of Apache Spark</h1>
+</div>
+
+</div>
+<div id="content" class="presentation">
+<div id='title-slide' class='slide'>
+<h1>Overview of Apache Spark</h1>
+<h2>Leif Poorman</h2>
+<h3><a href="mailto:leif.poorman@gmail.com">leif.poorman@gmail.com</a></h3>
+<h4>Central VA Scala Scholars, 17 April 2014</h4>
+</div>
+
+
+<div id="outline-container-sec-1" class="outline-1  slide">
+<h1 id="sec-1">Apache Spark</h1>
+<div class="outline-text-2" id="text-1">
+
+<div class="figure">
+<p><img src="./img/spark-logo.png" alt="spark-logo.png" />
+</p>
+</div>
+<ul class='org-ul'>
+<li>"a fast and general engine for large-scale data processing"
+</li>
+<li>Disclaimer: Most of what I'm going to show can be gleaned from the
+Spark website &amp; docs&#x2013;but I've compressed it, at least
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-2" class="outline-1  slide">
+<h1 id="sec-2">Elevator Pitch</h1>
+<div class="outline-text-2" id="text-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">&#xa0;</th>
+<th scope="col" class="left">&#xa0;</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Fast</td>
+<td class="left">Easy</td>
+</tr>
+
+<tr>
+<td class="left"><img src="./img/spark-speed.png" alt="spark-speed.png" /></td>
+<td class="left"><img src="./img/spark-easy.png" alt="spark-easy.png" /></td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="left">General</td>
+<td class="left">Well-integrated</td>
+</tr>
+
+<tr>
+<td class="left"><img src="./img/spark-general.png" alt="spark-general.png" /></td>
+<td class="left"><img src="./img/spark-well-integrated.png" alt="spark-well-integrated.png" /></td>
+</tr>
+
+<tr>
+<td class="left">&#xa0;</td>
+<td class="left">(run on Hadoop 2, YARN, EC2, Mesos, standalone)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-3" class="outline-1  slide">
+<h1 id="sec-3">Extra Pitch &#x2013; Non-Scala</h1>
+<div class="outline-text-2" id="text-3">
+<ul class='org-ul'>
+<li>Why?  Some analysts don't program Scala <img src="./img/Face-surprise.svg" alt="Face-surprise.svg" />
+    <img src="./img/Smiley_emoticons_doh.gif" alt="Smiley_emoticons_doh.gif" />
+</li>
+<li><a href="http://spark.apache.org/docs/latest/python-programming-guide.html">Python</a> API
+</li>
+<li><a href="http://amplab-extras.github.io/SparkR-pkg/">SparkR</a> (Spark API in R)
+</li>
+<li><a href="http://shark.cs.berkeley.edu/">SQL</a> (at least the Hive version of it)
+</li>
+<li><a href="http://spark.apache.org/docs/latest/java-programming-guide.html">Java</a> API (but why?!)
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-4" class="outline-1  slide">
+<h1 id="sec-4">Core Abstraction: <b>RDD</b></h1>
+<div class="outline-text-1" id="text-4">
+</div><div id="outline-container-sec-4-1" class="outline-2">
+<h2 id="sec-4-1">Resilient Distributed Dataset</h2>
+<div class="outline-text-2" id="text-4-1">
+</div><div id="outline-container-sec-4-1-1" class="outline-3">
+<h3 id="sec-4-1-1">Can be created from</h3>
+<div class="outline-text-3" id="text-4-1-1">
+</div><ul class="org-ul"><li>"Files" (HDFS, local, S3, HBase; anything Hadoop-readable, really)<br  /></li>
+<li>Scala Seq's<br  /></li>
+<li><b>Transformations</b> on other RDDs<br  /><div class="outline-text-5" id="text-4-1-1-3">
+<p>
+Just constructs a computation graph, no work done yet
+</p>
+</div>
+</li></ul>
+</div>
+
+<div id="outline-container-sec-4-1-2" class="outline-3">
+<h3 id="sec-4-1-2">Can be run by <b>Actions</b></h3>
+<div class="outline-text-3" id="text-4-1-2">
+</div><ul class="org-ul"><li>This is how to finally get a Scala value back to the driver program (client)<br  /></li>
+<li>One Spark program can have many actions<br  /></li>
+<li>One action is similar to one MR job<br  /></li>
+<li>It's unclear to me what happens when the driver program crashes<br  /></li></ul>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-5" class="outline-1  slide">
+<h1 id="sec-5">Transformations (on RDD[T])</h1>
+<div class="outline-text-2" id="text-5">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">map</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">U</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">flatMap</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">TraversableOnce</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">filter</span>(f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Boolean</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">distinct</span>(numPartitions<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">distinct</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">zip</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">U</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sample</span>(withReplacement<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>, fraction<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span>, seed<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">++</span> or union(other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">groupBy</span>[<span style="color: #d55e00; font-weight: bold;">K</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">K</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">T</span>])]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">repartition</span>(numPartitions<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">coalesce</span>(numPartitions<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>, shuffle<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">false</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">glom</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">pipe</span>(command<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">String</span>, env<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Map</span>[<span style="color: #d55e00; font-weight: bold;">String</span>, <span style="color: #d55e00; font-weight: bold;">String</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">String</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">cartesian</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">U</span>)]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-6" class="outline-1  slide">
+<h1 id="sec-6">More Transformations (on RDD[(K,V)])</h1>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">combineByKey</span>[<span style="color: #d55e00; font-weight: bold;">C</span>](<span style="color: #d55e00; font-weight: bold;">VtoC</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">V</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">C</span>, addCV<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">C</span>, <span style="color: #d55e00; font-weight: bold;">V</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">C</span>, addCC<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">C</span>, <span style="color: #d55e00; font-weight: bold;">C</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">C</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>,<span style="color: #d55e00; font-weight: bold;">C</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">foldByKey</span>(zeroValue<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">V</span>)(func<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">V</span>, <span style="color: #d55e00; font-weight: bold;">V</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">V</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">reduceByKey</span>(func<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">V</span>, <span style="color: #d55e00; font-weight: bold;">V</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">V</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">countApproxDistinctByKey</span>(relativeSD<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">0.05</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Long</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">groupByKey</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">V</span>])]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">join</span>[<span style="color: #d55e00; font-weight: bold;">W</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W</span>)])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, (<span style="color: #d55e00; font-weight: bold;">V</span>, <span style="color: #d55e00; font-weight: bold;">W</span>))]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">leftOuterJoin</span>[<span style="color: #d55e00; font-weight: bold;">W</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W</span>)])<span style="color: #56b4e9; font-weight: bold;">:</span>  <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, (<span style="color: #d55e00; font-weight: bold;">V</span>, <span style="color: #d55e00; font-weight: bold;">Option</span>[<span style="color: #d55e00; font-weight: bold;">W</span>]))]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">rightOuterJoin</span>[<span style="color: #d55e00; font-weight: bold;">W</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W</span>)])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, (<span style="color: #d55e00; font-weight: bold;">Option</span>[<span style="color: #d55e00; font-weight: bold;">V</span>], <span style="color: #d55e00; font-weight: bold;">W</span>))]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mapValues</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">V</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">U</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">U</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">flatMapValues</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">V</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">TraversableOnce</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">U</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">cogroup</span>[<span style="color: #d55e00; font-weight: bold;">W1</span>, <span style="color: #d55e00; font-weight: bold;">W2</span>](w1<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W1</span>)], w2<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W2</span>)])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, (<span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">V</span>], <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">W1</span>], <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">W2</span>]))]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">subtractByKey</span>[<span style="color: #d55e00; font-weight: bold;">W</span>](other<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">W</span>)])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>)] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">like set diff</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">keys</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">K</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">values</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">V</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sortByKey</span>(ascending<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>, numPartitions<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>,<span style="color: #d55e00; font-weight: bold;">V</span>)]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">partitionBy</span>(partitioner<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Partitioner</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>)]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-7" class="outline-1  slide">
+<h1 id="sec-7">Even More Transformations (fine-grained control)</h1>
+<div class="outline-text-2" id="text-7">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mapPartitions</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](
+    f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">T</span>] <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">U</span>], preservesPartitioning<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mapPartitionsWithIndex</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](
+    f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">Int</span>, <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">U</span>], preservesPartitioning<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mapPartitionsWithContext</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](
+    f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">TaskContext</span>, <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">U</span>],
+    preservesPartitioning<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">false</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mapWith</span>[<span style="color: #d55e00; font-weight: bold;">A</span>, <span style="color: #d55e00; font-weight: bold;">U</span>] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">flatMapWith, filterWith</span>
+    (constructA<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">A</span>, preservesPartitioning<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>)
+    (f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">A</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">U</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">filterWith</span>[<span style="color: #d55e00; font-weight: bold;">A</span>](constructA<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">A</span>)(p<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">A</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Boolean</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">zipPartitions</span>[<span style="color: #d55e00; font-weight: bold;">U</span>, <span style="color: #d55e00; font-weight: bold;">V</span>]
+    (rdd2<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])
+    (f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">T</span>], <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Iterator</span>[<span style="color: #d55e00; font-weight: bold;">V</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">V</span>]
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Many prev. examples have alternate sigs to control data partitioning</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">groupBy</span>[<span style="color: #d55e00; font-weight: bold;">K</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">K</span>, numPartitions<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">T</span>])]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">groupBy</span>[<span style="color: #d55e00; font-weight: bold;">K</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">K</span>, p<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Partitioner</span>)<span style="color: #56b4e9; font-weight: bold;">:</span>     <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">T</span>])]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-8" class="outline-1  slide">
+<h1 id="sec-8">Actions (RDD[T])</h1>
+<div class="outline-text-2" id="text-8">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">foreach</span>(f<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span> <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Unit</span>)
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">collect</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">reduce</span>(f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">T</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">T</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span>
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">more general reduce</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">fold</span>(zero<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span>)(op<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">T</span>, <span style="color: #d55e00; font-weight: bold;">T</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">T</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">T</span>
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">yet more general</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">aggregate</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](zero<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">U</span>)(seqOp<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">U</span>, <span style="color: #d55e00; font-weight: bold;">T</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">U</span>, combOp<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">U</span>, <span style="color: #d55e00; font-weight: bold;">U</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">U</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">U</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-9" class="outline-1  slide">
+<h1 id="sec-9">Actions (RDD[(K,V)])</h1>
+<div class="outline-text-2" id="text-9">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">reduceByKeyLocally</span>(func<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">V</span>, <span style="color: #d55e00; font-weight: bold;">V</span>) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">V</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Map</span>[<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">countByKey</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Map</span>[<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Long</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">collectAsMap</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Map</span>[<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">V</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">lookup</span>(key<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">K</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">V</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">saveAsSequenceFile</span>(path<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">String</span>, codec<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">CompressionCodec</span>) <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">approx. type</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-10" class="outline-1  slide">
+<h1 id="sec-10">Actions (RDD[Double])</h1>
+<div class="outline-text-2" id="text-10">
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sum</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">stats</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">StatCounter</span> <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">(count, mean, vars, stdevs)</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">mean</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> stats().mean
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">variance</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> stats().variance
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">stdev</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> stats().stdev
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sampleStdev</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> stats().sampleStdev
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sampleVariance</span>()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> stats().sampleVariance
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">histogram</span>(bucketCount<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Pair</span>[<span style="color: #d55e00; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Double</span>], <span style="color: #d55e00; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Long</span>]]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">histogram</span>(buckets<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Double</span>], evenBuckets<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Long</span>]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-11" class="outline-1  slide">
+<h1 id="sec-11">Even Moar Actions (getting approximate results)</h1>
+<div class="outline-text-2" id="text-11">
+<p>
+An interesting new feature is the ability to get approximate results
+within a certain time / error
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">countByKeyApprox</span>(timeout<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Long</span>, confidence<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">0.95</span>)
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">takeSample</span>(withReplacement<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>, num<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>, seed<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Int</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">meanApprox</span>(timeout<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Long</span>, confidence<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">0.95</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">PartialResult</span>[<span style="color: #d55e00; font-weight: bold;">BoundedDouble</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">sumApprox</span>(timeout<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Long</span>, confidence<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">0.95</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">PartialResult</span>[<span style="color: #d55e00; font-weight: bold;">BoundedDouble</span>]
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">not an action, but appropriate to remind you of it here:</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">countApproxDistinctByKey</span>(relativeSD<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">0.05</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Long</span>)]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-12" class="outline-1  slide">
+<h1 id="sec-12">RDD Persistence, Shared Variables</h1>
+<div class="outline-text-2" id="text-12">
+<p>
+"One of the most important capabilities in Spark is persisting (or
+caching) a dataset in memory across operations"
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scala">persist()<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">alias: cache()</span>
+persist(newLevel<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">StorageLevel</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #d55e00; font-weight: bold;">Storagelevel</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">MEMORY_ONLY</span> | <span style="color: #d55e00; font-weight: bold;">MEMORY_AND_DISK</span> | <span style="color: #d55e00; font-weight: bold;">DISK_ONLY</span> |
+               <span style="color: #d55e00; font-weight: bold;">MEMORY_ONLY_SER</span> | <span style="color: #d55e00; font-weight: bold;">MEMORY_AND_DISK_SER</span> | <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">java ser.</span>
+               <span style="color: #d55e00; font-weight: bold;">MEMORY_ONLY_2</span> | <span style="color: #d55e00; font-weight: bold;">MEMORY_AND_DISK_2</span> | etc <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">replicate to 2 nodes</span>
+</pre>
+</div>
+
+<p>
+"read-only variable cached on each machine&#x2026;. They can be used, for
+example, to give every node a copy of a large input dataset in an
+efficient manner"
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #d55e00; font-weight: bold;">SparkContext</span>.broadcast(v)
+</pre>
+</div>
+
+<p>
+"Accumulators are variables that are only “added” to through an
+associative operation"
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">accum</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #d55e00; font-weight: bold;">SparkContext</span>.accumulator(<span style="color: #d55e00; font-weight: bold;">0</span>); ... ; accum += hits
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-13" class="outline-1  slide">
+<h1 id="sec-13">Integration</h1>
+<div class="outline-text-2" id="text-13">
+<ul class='org-ul'>
+<li>AWS: can run a Spark job like any other EMR job
+</li>
+<li>Private Hadoop cluster
+<ul class='org-ul'>
+<li>Can run on YARN, and so inherit its tooling
+</li>
+<li>lots of companies committed to supporting Spark in their stack:
+Hortonworks, Cloudera, MapR (who partner with Spark creators)
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-14" class="outline-1  slide">
+<h1 id="sec-14">Intro to Extensions</h1>
+<div class="outline-text-2" id="text-14">
+<ul class='org-ul'>
+<li>We haven't even looked at much of the API for managing data
+(checkpointing, writing your own partitioners, I/O from <b>all</b> the
+noSQL, etc)
+</li>
+<li>Whew!  After all that, I'm still going to say "Intro to" something?!
+</li>
+<li>It's a very nice API&#x2013;but wait, there's more!  Many nice
+extensions have been built on top of it.
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-sec-15" class="outline-1  slide">
+<h1 id="sec-15">Shark</h1>
+<div class="outline-text-2" id="text-15">
+<p>
+Distributed SQL query engine for Hadoop data
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="left">Feature</th>
+<th scope="col" class="left">Bottom line</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Execution engine + caching</td>
+<td class="left"><img src="./img/shark-speedx.png" alt="shark-speedx.png" /></td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="left">ML integration</td>
+<td class="left"><img src="./img/shark-ml.png" alt="shark-ml.png" /></td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="left">Columnar store</td>
+<td class="left">Data locality -&gt; in-memory materialized views (i.e. more speed)</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td class="left">Hive compatibility</td>
+<td class="left">Run unmodified Hive queries on existing warehouses.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-16" class="outline-1  slide">
+<h1 id="sec-16">MLib</h1>
+<div class="outline-text-2" id="text-16">
+<p>
+All the machine learning that's fit to distribute.  Or at least a
+lot of it:
+</p>
+<ul class='org-ul'>
+<li>Classification
+<ul class='org-ul'>
+<li>Linear SVM, Logistic Regression
+Both w/ L<sup>1</sup> and L<sup>2</sup> regularization; use stochastic gradient
+descent (SGD)
+</li>
+<li>Multinomial Naive Bayes
+</li>
+</ul>
+</li>
+<li>Linear Regression
+<ul class='org-ul'>
+<li>Again, L<sup>1</sup> and L<sup>2</sup> reg. using SGD
+</li>
+</ul>
+</li>
+<li>Clustering (parallel kmeans++)
+</li>
+<li>Collaborative Filtering (Recommendations)
+<ul class='org-ul'>
+<li>Alternating Least Squares variant tailored for implicit feedback
+</li>
+</ul>
+</li>
+<li>Gradient Descent (to build your own algorithms)
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-sec-17" class="outline-1  slide">
+<h1 id="sec-17">MLib (example code)</h1>
+<div class="outline-text-2" id="text-17">
+\begin{equation*}
+\pi_c = log(n_c + \lambda) - log(N + C \lambda)
+\end{equation*}
+\begin{equation*}
+\theta_{ci} = \log(n_{ci} + \lambda) - \log(\sum_i{n_{ci}} + N_c + \lambda)
+\end{equation*}
+
+<div class="org-src-container">
+
+<pre class="src src-scala">data<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">LabeledPoint</span>]
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">aggregated</span> <span style="color: #56b4e9; font-weight: bold;">=</span> data.aggregate(...)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">mutable</span>.<span style="color: #d55e00; font-weight: bold;">Map</span>[<span style="color: #d55e00; font-weight: bold;">Int</span>, (<span style="color: #d55e00; font-weight: bold;">Int</span>, <span style="color: #d55e00; font-weight: bold;">DoubleMatrix</span>)]
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">C</span> <span style="color: #56b4e9; font-weight: bold;">=</span> aggregated.size  <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Kinds of label</span>
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">N</span> <span style="color: #56b4e9; font-weight: bold;">=</span> aggregated.values.map(<span style="color: #56b4e9; font-weight: bold;">_</span>._1).sum  <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Total sample count</span>
+
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">pi</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #56b4e9; font-weight: bold;">new</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Double</span>](<span style="color: #d55e00; font-weight: bold;">C</span>)
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">theta</span> <span style="color: #56b4e9; font-weight: bold;">=</span> <span style="color: #56b4e9; font-weight: bold;">new</span> <span style="color: #0072b2; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Array</span>[<span style="color: #d55e00; font-weight: bold;">Double</span>]](<span style="color: #d55e00; font-weight: bold;">C</span>)
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">piLogDenom</span> <span style="color: #56b4e9; font-weight: bold;">=</span> math.log(<span style="color: #d55e00; font-weight: bold;">N</span> + <span style="color: #d55e00; font-weight: bold;">C</span> * lambda)
+
+<span style="color: #56b4e9; font-weight: bold;">for</span> ((label, (count, fs)) <span style="color: #56b4e9; font-weight: bold;">&lt;-</span> aggregated) {
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">thetaLogDenom</span> <span style="color: #56b4e9; font-weight: bold;">=</span> math.log(fs.sum() + fs.length * lambda)
+  pi(label) <span style="color: #56b4e9; font-weight: bold;">=</span> math.log(count + lambda) - piLogDenom
+  theta(label) <span style="color: #56b4e9; font-weight: bold;">=</span> fs.toArray.map(f <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> math.log(f + lambda) - thetaLogDenom)
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-18" class="outline-1  slide">
+<h1 id="sec-18">Bagel</h1>
+<div class="outline-text-2" id="text-18">
+<ul class='org-ul'>
+<li>Spark implementation of Google's Pregel graph processing
+framework
+</li>
+<li>Operates on graph represented as RDD[(VertexID,Vertex)]
+</li>
+<li>Your algo. implemented as message-passing between vertices:
+</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #0072b2;">@serializable</span> <span style="color: #56b4e9; font-weight: bold;">class</span> <span style="color: #0072b2; font-weight: bold;">PREdge</span>(<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">targetId</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">String</span>) <span style="color: #56b4e9; font-weight: bold;">extends</span> <span style="color: #0072b2; font-weight: bold;">Edge</span>
+<span style="color: #0072b2;">@serializable</span> <span style="color: #56b4e9; font-weight: bold;">class</span> <span style="color: #0072b2; font-weight: bold;">PRVertex</span>(
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">id</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">String</span>, <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">rank</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span>, <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">outEdges</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">Edge</span>],
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">active</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Boolean</span>) <span style="color: #56b4e9; font-weight: bold;">extends</span> <span style="color: #0072b2; font-weight: bold;">Vertex</span>
+<span style="color: #0072b2;">@serializable</span> <span style="color: #56b4e9; font-weight: bold;">class</span> <span style="color: #0072b2; font-weight: bold;">PRMessage</span>(
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">targetId</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">String</span>, <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">rankShare</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Double</span>) <span style="color: #56b4e9; font-weight: bold;">extends</span> <span style="color: #0072b2; font-weight: bold;">Message</span>
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">PageRank algo elided for space (although it's only about 16 lines)</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-19" class="outline-1  slide">
+<h1 id="sec-19">GraphX</h1>
+<div class="outline-text-2" id="text-19">
+<p>
+"GraphX extends the Spark RDD by introducing the Resilient
+Distributed Property Graph: a directed multigraph with properties
+attached to each vertex and edge."
+</p>
+
+<p>
+This is the graph computation model to use now: Bagel will
+eventually be deprecated.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #56b4e9; font-weight: bold;">class</span> <span style="color: #0072b2; font-weight: bold;">Graph</span>[<span style="color: #d55e00; font-weight: bold;">VData</span>, <span style="color: #d55e00; font-weight: bold;">EData</span>] {
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">vertices</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">VertexRDD</span>[<span style="color: #d55e00; font-weight: bold;">VData</span>] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">== RDD[(VertexID, VData)]</span>
+  <span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">edges</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">EdgeRDD</span>[<span style="color: #d55e00; font-weight: bold;">EData</span>]      <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">== RDD[Edge[EData]]</span>
+}
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">graph</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Graph</span>[(<span style="color: #d55e00; font-weight: bold;">String</span>, <span style="color: #d55e00; font-weight: bold;">String</span>), <span style="color: #d55e00; font-weight: bold;">String</span>] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">[(name, position), person_relationship]</span>
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Count all users which are postdocs</span>
+graph.vertices.filter { <span style="color: #56b4e9; font-weight: bold;">case</span> (<span style="color: #e69f00; font-weight: bold;">id</span>, (<span style="color: #e69f00; font-weight: bold;">name</span>, <span style="color: #e69f00; font-weight: bold;">position</span>)) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> position == <span style="color: #848ea9;">"postdoc"</span> }.count
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Count all the edges where src &gt; dst</span>
+graph.edges.filter(e <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> e.srcId &gt; e.dstId).count
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">Graph Operators (Transformations, Actions)</span>
+<span style="color: #56b4e9; font-weight: bold;">val</span> <span style="color: #e69f00; font-weight: bold;">inDegrees</span><span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">VertexRDD</span>[<span style="color: #d55e00; font-weight: bold;">Int</span>] <span style="color: #56b4e9; font-weight: bold;">=</span> graph.inDegrees
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">and, as you guessed, many, many more.</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-20" class="outline-1  slide">
+<h1 id="sec-20">BlinkDB</h1>
+<div class="outline-text-2" id="text-20">
+<p>
+"Queries with Bounded Errors and Bounded Response Times on Very Large Data"
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="left" />
+
+<col  class="left" />
+</colgroup>
+<tbody>
+<tr>
+<td class="left">Nice and declarative</td>
+<td class="left">Note log scale!! !</td>
+</tr>
+
+<tr>
+<td class="left"><img src="./img/blinkdb-sqlx.png" alt="blinkdb-sqlx.png" /></td>
+<td class="left"><img src="./img/blinkdb-speedx.png" alt="blinkdb-speedx.png" /></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-sec-21" class="outline-1  slide">
+<h1 id="sec-21">Spark Streaming</h1>
+<div class="outline-text-2" id="text-21">
+
+<div class="figure">
+<p><img src="./img/streaming.png" alt="streaming.png" />
+</p>
+</div>
+<ul class='org-ul'>
+<li>Oriented around small batches, rather than message-at-a-time like
+some other frameworks
+</li>
+<li>Central abstraction is a DStream, internally a Seq of RDDs sampled
+at some time interval
+</li>
+<li>Ingest from Kafka, Flume, HDFS, ZeroMQ, sockets, Twitter
+</li>
+</ul>
+
+<div class="org-src-container">
+
+<pre class="src src-scala"><span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">transform batchwise, e.g. for joining with small static data</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">transform</span>[<span style="color: #d55e00; font-weight: bold;">U</span>](transformFunc<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">T</span>] <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">RDD</span>[<span style="color: #d55e00; font-weight: bold;">U</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">DStream</span>[<span style="color: #d55e00; font-weight: bold;">U</span>]
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">sliding window; windowDuration multiple of originial duration</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">window</span>(windowDuration<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Duration</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">DStream</span>[<span style="color: #d55e00; font-weight: bold;">T</span>]
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">groupByKeyAndWindow</span>(windowDuration<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">Duration</span>)<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">DStream</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">V</span>])] <span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">etc.</span>
+<span style="color: #009e73; font-style: italic;">// </span><span style="color: #009e73; font-style: italic;">DStream[(K, V)]; update state S using new values for key; running totals, etc.</span>
+<span style="color: #56b4e9; font-weight: bold;">def</span> <span style="color: #d55e00; font-weight: bold;">updateStateByKey</span>[<span style="color: #d55e00; font-weight: bold;">S</span>](f<span style="color: #56b4e9; font-weight: bold;">:</span> (<span style="color: #d55e00; font-weight: bold;">Seq</span>[<span style="color: #d55e00; font-weight: bold;">V</span>], <span style="color: #d55e00; font-weight: bold;">Option</span>[<span style="color: #d55e00; font-weight: bold;">S</span>]) <span style="color: #56b4e9; font-weight: bold;">=&gt;</span> <span style="color: #d55e00; font-weight: bold;">Option</span>[<span style="color: #d55e00; font-weight: bold;">S</span>])<span style="color: #56b4e9; font-weight: bold;">:</span> <span style="color: #0072b2; font-weight: bold;">DStream</span>[(<span style="color: #d55e00; font-weight: bold;">K</span>, <span style="color: #d55e00; font-weight: bold;">S</span>)]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-22" class="outline-1  slide">
+<h1 id="sec-22">Acknowledgements</h1>
+<div class="outline-text-2" id="text-22">
+<ul class='org-ul'>
+<li><a href="https://amplab.cs.berkeley.edu/">Berkeley AmpLab</a>, for focusing on usability and documentation as
+well as advanced alien technology
+<ul class='org-ul'>
+<li>"What this world needs is a good five-dollar plasma
+weapon" <sup><a id="fnr.1" name="fnr.1" class="footref" href="#fn.1">1</a></sup>
+</li>
+</ul>
+</li>
+<li><a href="http://databricks.com/">Databricks</a>, the commercial Spark support spin-off <sup><a id="fnr.2" name="fnr.2" class="footref" href="#fn.2">2</a></sup>
+</li>
+</ul>
+
+<ol style="font-size: 50%;">
+  <li>Phrase I assume was used during Spark design discussions.
+  <li>Shut up and take my money!
+</ol>
+</div>
+</div>
+
+
+</div>
+</body>
+</html>
